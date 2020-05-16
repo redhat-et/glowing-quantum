@@ -6,7 +6,7 @@
 
   
 
-This installation method will use the latest version of the operator image that has been built and published to docker hun
+This installation method will use the latest version of the operator image that has been built and published to docker hub
 
   
 
