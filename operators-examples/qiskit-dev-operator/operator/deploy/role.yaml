@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: qiskit-operator
+  name: qiskit-dev-operator
 rules:
 - apiGroups:
   - "route.openshift.io"
@@ -60,7 +60,7 @@ rules:
 - apiGroups:
   - apps
   resourceNames:
-  - qiskit-operator
+  - qiskit-dev-operator
   resources:
   - deployments/finalizers
   verbs:
@@ -79,7 +79,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - dobtech.io
+  - singhp11.io
   resources:
   - '*'
   verbs:

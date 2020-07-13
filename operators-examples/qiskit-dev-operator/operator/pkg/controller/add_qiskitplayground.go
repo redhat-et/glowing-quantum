@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/jdob/qiskit-operator/pkg/controller/qiskitplayground"
+	"github.com/husky-parul/qiskit-dev-operator/pkg/controller/qiskitplayground"
 )
 
 func init() {

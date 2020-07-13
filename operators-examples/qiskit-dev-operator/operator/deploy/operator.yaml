@@ -1,23 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qiskit-operator
+  name: qiskit-dev-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: qiskit-operator
+      name: qiskit-dev-operator
   template:
     metadata:
       labels:
-        name: qiskit-operator
+        name: qiskit-dev-operator
     spec:
-      serviceAccountName: qiskit-operator
+      serviceAccountName: qiskit-dev-operator
       containers:
-        - name: qiskit-operator
-          image: singhp11/qiskit-operator
+        - name: qiskit-dev-operator
+          # Replace this with the built image name
+          image: singhp11/qiskit-dev-operator:demo
           command:
-          - qiskit-operator
+          - qiskit-dev-operator
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
@@ -29,4 +30,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "qiskit-operator"
+              value: "qiskit-dev-operator"

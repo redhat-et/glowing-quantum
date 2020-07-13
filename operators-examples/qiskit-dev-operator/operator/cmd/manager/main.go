@@ -13,9 +13,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"github.com/jdob/qiskit-operator/pkg/apis"
-	"github.com/jdob/qiskit-operator/pkg/controller"
-	"github.com/jdob/qiskit-operator/version"
+	"github.com/husky-parul/qiskit-dev-operator/pkg/apis"
+	"github.com/husky-parul/qiskit-dev-operator/pkg/controller"
+	"github.com/husky-parul/qiskit-dev-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -87,7 +87,7 @@ func main() {
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
-	err = leader.Become(ctx, "qiskit-operator-lock")
+	err = leader.Become(ctx, "qiskit-dev-operator-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

@@ -3,13 +3,18 @@ package qiskitplayground
 import (
 	"context"
 
-	dobtechv1 "github.com/jdob/qiskit-operator/pkg/apis/dobtech/v1"
+	singhp11v1 "github.com/husky-parul/qiskit-dev-operator/pkg/apis/singhp11/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -19,10 +24,227 @@ import (
 
 var log = logf.Log.WithName("controller_qiskitplayground")
 
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
+// blank assignment to verify that ReconcileQiskitPlayground implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcileQiskitPlayground{}
+
+// ReconcileQiskitPlayground reconciles a QiskitPlayground object
+type ReconcileQiskitPlayground struct {
+	// This client, initialized using mgr.Client() above, is a split client
+	// that reads objects from the cache and writes to the apiserver
+	client client.Client
+	scheme *runtime.Scheme
+}
+
+const port = 8888
+const image = "singhp11/centos-jupyter"
+
+func deploymentName(q *singhp11v1.QiskitPlayground) string {
+	return q.Name
+}
+
+func serviceName(q *singhp11v1.QiskitPlayground) string {
+	return q.Name
+}
+
+func routeName(q *singhp11v1.QiskitPlayground) string {
+	return q.Name
+}
+
+func (r *ReconcileQiskitPlayground) ensureDeployment(request reconcile.Request, instance *singhp11v1.QiskitPlayground, dep *appsv1.Deployment) (*reconcile.Result, error) {
+	// See if deployment already exists and create if it doesn't
+	found := &appsv1.Deployment{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      dep.Name,
+		Namespace: instance.Namespace,
+	}, found)
+	if err != nil && errors.IsNotFound(err) {
+
+		// Create the deployment
+		log.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+		err = r.client.Create(context.TODO(), dep)
+
+		if err != nil {
+			// Deployment failed
+			log.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+			return &reconcile.Result{}, err
+		} else {
+			// Deployment was successful
+			return nil, nil
+		}
+	} else if err != nil {
+		// Error that isn't due to the deployment not existing
+		log.Error(err, "Failed to get Deployment")
+		return &reconcile.Result{}, err
+	}
+
+	return nil, nil
+}
+
+func (r *ReconcileQiskitPlayground) ensureService(request reconcile.Request, instance *singhp11v1.QiskitPlayground, s *corev1.Service) (*reconcile.Result, error) {
+	found := &corev1.Service{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      s.Name,
+		Namespace: instance.Namespace,
+	}, found)
+	if err != nil && errors.IsNotFound(err) {
+
+		// Create the service
+		log.Info("Creating a new Service", "Service.Namespace", s.Namespace, "Service.Name", s.Name)
+		err = r.client.Create(context.TODO(), s)
+
+		if err != nil {
+			// Creation failed
+			log.Error(err, "Failed to create new Service", "Service.Namespace", s.Namespace, "Service.Name", s.Name)
+			return &reconcile.Result{}, err
+		} else {
+			// Creation was successful
+			return nil, nil
+		}
+	} else if err != nil {
+		// Error that isn't due to the service not existing
+		log.Error(err, "Failed to get Service")
+		return &reconcile.Result{}, err
+	}
+
+	return nil, nil
+}
+
+func (r *ReconcileQiskitPlayground) ensureRoute(request reconcile.Request, instance *singhp11v1.QiskitPlayground, rte *routev1.Route) (*reconcile.Result, error) {
+	found := &routev1.Route{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      rte.Name,
+		Namespace: instance.Namespace,
+	}, found)
+	if err != nil && errors.IsNotFound(err) {
+
+		// Create the route
+		log.Info("Creating a new Route", "Route.Namespace", rte.Namespace, "Route.Name", rte.Name)
+		err = r.client.Create(context.TODO(), rte)
+
+		if err != nil {
+			// Creation failed
+			log.Error(err, "Failed to create new Route")
+			return &reconcile.Result{}, err
+		} else {
+			// Creation successful
+			return nil, nil
+		}
+	} else if err != nil {
+		// Error that isn't the route not existing
+		log.Error(err, "Failed to create Route")
+		return &reconcile.Result{}, err
+	}
+
+	return nil, nil
+}
+
+func labels(q *singhp11v1.QiskitPlayground) map[string]string {
+	return map[string]string{
+		"app":                 "playground",
+		"qiskitplayground_cr": q.Name,
+	}
+}
+
+func (r *ReconcileQiskitPlayground) deployment(q *singhp11v1.QiskitPlayground) *appsv1.Deployment {
+	labels := labels(q)
+	size := int32(1)
+
+	dep := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName(q),
+			Namespace: q.Namespace,
+			Labels:    labels,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &size,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Image: image,
+						Name:  "playground",
+						Ports: []corev1.ContainerPort{{
+							ContainerPort: port,
+							Name:          "playground",
+						}},
+						VolumeMounts: []corev1.VolumeMount{{
+							Name:      "qiskit-secret",
+							MountPath: "/tmp/secrets/qiskitsecret",
+							ReadOnly:  true,
+						}},
+					}},
+					Volumes: []corev1.Volume{{
+						Name: "qiskit-secret",
+						VolumeSource: corev1.VolumeSource{
+							Secret: &corev1.SecretVolumeSource{
+								SecretName: "qiskit-secret",
+							},
+						},
+					}},
+				},
+			},
+		},
+	}
+
+	controllerutil.SetControllerReference(q, dep, r.scheme)
+	return dep
+}
+
+func (r *ReconcileQiskitPlayground) service(q *singhp11v1.QiskitPlayground) *corev1.Service {
+	labels := labels(q)
+
+	s := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceName(q),
+			Namespace: q.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Ports: []corev1.ServicePort{{
+				Protocol:   corev1.ProtocolTCP,
+				Port:       port,
+				TargetPort: intstr.FromInt(port),
+			}},
+			Type: corev1.ServiceTypeNodePort,
+		},
+	}
+
+	controllerutil.SetControllerReference(q, s, r.scheme)
+	return s
+}
+
+func (r *ReconcileQiskitPlayground) route(q *singhp11v1.QiskitPlayground) *routev1.Route {
+	labels := labels(q)
+
+	rte := &routev1.Route{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Route",
+			APIVersion: "route.openshift.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      routeName(q),
+			Namespace: q.Namespace,
+			Labels:    labels,
+		},
+		Spec: routev1.RouteSpec{
+			To: routev1.RouteTargetReference{
+				Kind: "Service",
+				Name: serviceName(q),
+			},
+			Port: &routev1.RoutePort{
+				TargetPort: intstr.FromInt(8888),
+			},
+		},
+	}
+
+	return rte
+}
 
 // Add creates a new QiskitPlayground Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -44,39 +266,29 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource QiskitPlayground
-	err = c.Watch(&source.Kind{Type: &dobtechv1.QiskitPlayground{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &singhp11v1.QiskitPlayground{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
 	// Watch for changes to secondary resource Pods and requeue the owner QiskitPlayground
+
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &dobtechv1.QiskitPlayground{},
+		OwnerType:    &singhp11v1.QiskitPlayground{},
 	})
 	if err != nil {
 		return err
 	}
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &dobtechv1.QiskitPlayground{},
+		OwnerType:    &singhp11v1.QiskitPlayground{},
 	})
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// blank assignment to verify that ReconcileQiskitPlayground implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileQiskitPlayground{}
-
-// ReconcileQiskitPlayground reconciles a QiskitPlayground object
-type ReconcileQiskitPlayground struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a QiskitPlayground object and makes changes based on the state read
@@ -91,7 +303,7 @@ func (r *ReconcileQiskitPlayground) Reconcile(request reconcile.Request) (reconc
 	reqLogger.Info("Reconciling QiskitPlayground")
 
 	// Fetch the QiskitPlayground instance
-	instance := &dobtechv1.QiskitPlayground{}
+	instance := &singhp11v1.QiskitPlayground{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -103,9 +315,7 @@ func (r *ReconcileQiskitPlayground) Reconcile(request reconcile.Request) (reconc
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-
-    var result *reconcile.Result
-
+	var result *reconcile.Result
 	result, err = r.ensureDeployment(request, instance, r.deployment(instance))
 	if err != nil {
 		return *result, err
@@ -120,7 +330,5 @@ func (r *ReconcileQiskitPlayground) Reconcile(request reconcile.Request) (reconc
 	if err != nil {
 		return *result, err
 	}
-
-	// Everything went fine, don't requeue
 	return reconcile.Result{}, nil
 }
