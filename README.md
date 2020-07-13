@@ -15,6 +15,12 @@ These operators integrates your quantum workloads on OpenShift. It provides a de
 
     For getting started guides, installation, deployment and test Qiskit developer's experience operator follow [here](https://github.com/redhat-et/glowing-quantum/tree/qiskit-dev-op/operators-examples/qiskit-dev-operator).
 
+2. Qiskit Runtime Operator
+ 
+   This operator is targeted for personas classified as traditional application architects / developers who will be designing the production pipeline for heterogeneous applications that have both quantum and classical components. The operator has a similar architecture as the tensor flow serving. 
+  
+   The controller will expose REST API to submit as input quantum circuits and run them IBM quantum backends, choosing least best fit backend depending on number of qubits required, number of jobs already scheduled and proximity/locality of the backend. Job status and results can be queried using REST APIs.
+
 ## Contributing
 
 Operators for Qiskit  is a community driven project and we welcome contributions. See Contributing to get started.
