@@ -13,7 +13,7 @@ These operators integrates your quantum workloads on OpenShift. It provides a de
 
     Example notebook implementing [Grover's Search Algorithm](https://qiskit.org/textbook/ch-algorithms/grover.html)
 
-    For getting started guides, installation, deployment and test Qiskit developer's experience operator follow [here](https://github.com/husky-parul/glowing-quantum/tree/qiskit-dev-op/operators-examples/qiskit-dev-operator).
+    For getting started guides, installation, deployment and test Qiskit developer's experience operator follow [here](https://github.com/redhat-et/glowing-quantum/tree/qiskit-dev-op/operators-examples/qiskit-dev-operator).
 
 ## Contributing
 
@@ -21,4 +21,4 @@ Operators for Qiskit  is a community driven project and we welcome contributions
 
 ## Report a Bug
 
-For filing bugs, suggesting improvements, or requesting new features, please open an  [issue](https://github.com/yard-turkey/glowing-quantum/issues)
+For filing bugs, suggesting improvements, or requesting new features, please open an  [issue](https://github.com/redhat-et/glowing-quantum/issues)
