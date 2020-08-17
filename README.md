@@ -1,7 +1,7 @@
 
 # Operators for Qiskit
 
-## Overwiew
+## Overview
 
 These operators integrates your quantum workloads on OpenShift. It provides a development environment to implement quantum algorithms and runs them either on IBM quantum computers or simulators.
 
