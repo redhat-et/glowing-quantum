@@ -73,5 +73,5 @@ oc apply -f deploy/crds/dobtech.io_v1_qiskitplayground_cr.yaml
 ```
 7. The notebook is found on the exposed route
 ```
-oc status
+oc get routes
 ```
