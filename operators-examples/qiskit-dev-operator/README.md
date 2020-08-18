@@ -20,55 +20,42 @@ This installation method will use the latest version of the operator image that 
 1. Deploy the custom resource definition (CRD):
 
 ```
-oc apply -f deploy/crds/dobtech.io_qiskitplaygrounds_crd.yaml
-
+oc create -f operators-examples/qiskit-dev-operator/operator/deploy/crds/singhp11.io_qiskitplaygrounds_crd.yaml
 ```
 
  2. Deploy the RBAC configuration:
 ```
-oc apply -f deploy/role.yaml
-oc apply -f deploy/service_account.yaml
-oc apply -f deploy/role_binding.yaml
+oc apply -f operators-examples/qiskit-dev-operator/operator/deploy/role.yaml
+oc apply -f operators-examples/qiskit-dev-operator/operator/deploy/service_account.yaml
+oc apply -f operators-examples/qiskit-dev-operator/operator/deploy/role_binding.yaml
 ```
  3. Setting up authorization with IBMQ Account token
- 
- - Edit the configuration file:
+ Edit the configuration file:
 ```
-deploy/secret.cfg
+vi operators-examples/qiskit-dev-operator/operator/deploy/secret.cfg
 [AUTH TOKENS]
 token = your_IBMQ_account_token
 ```
-   - Convert the configuration to base64:
+ 4. Deploy the secret
 ```
-cat secret.cfg | base64
+oc create secret generic qiskit-secret --from-file=qiskit-secret.cfg=operators-examples/qiskit-dev-operator/operator/deploy/secret.cfg
 ```
-  - Place the output in deploy/secret.yaml as:
-```
-apiVersion: v1
-kind: Secret
-metadata:
-	name: qiskit-secret
-type: Opaque
-data:
-	qiskit-secret.cfg: <base64 encoded secret.cfg>
-```
-  - Deploy the secret
-```
-oc apply -f deploy/secret.yaml
-
-```
-4. Deploy the operator itself:
+ 5. Deploy the operator itself:
 
 ```
 oc apply -f deploy/operator.yaml
 ```
-5. Wait for the operator pod deployment to complete:
+ 6. Wait for the operator pod deployment to complete:
 ```
 watch oc get pods
 ```
 
-6. Deploy an instance of the custom resource:
+ 7. Deploy an instance of the custom resource:
 ```
-oc apply -f deploy/crds/dobtech.io_v1_qiskitplayground_cr.yaml
+oc create -f operators-examples/qiskit-dev-operator/operator/deploy/crds/singhp11.io_v1_qiskitplayground_cr.yaml
 ```
-7. The notebook is found on the exposed route
+
+ 8. The notebook is found on the exposed route
+```
+oc get routes
+```
